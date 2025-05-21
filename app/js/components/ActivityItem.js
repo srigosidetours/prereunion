@@ -33,21 +33,26 @@ class ActivityItem extends HTMLElement {
     }
 
     set activity(data) {
-        this._activity = data;
-        // Set attributes from the data object to make them observable and for clarity if inspected
-        if (data) {
-            this.setAttribute('id', data.id);
-            this.setAttribute('description', data.description);
-            this.setAttribute('status', data.status);
-            this.setAttribute('creation-date', data.creation_date);
-            if(data.user_name) this.setAttribute('user-name', data.user_name);
-            if(data.user_surname) this.setAttribute('user-surname', data.user_surname);
-            if(data.user_office) this.setAttribute('user-office', data.user_office);
-            // Ensure soft_deleted is '1' or '0' string for attribute
-            this.setAttribute('soft-deleted', data.soft_deleted ? '1' : '0');
+        try {
+            this._activity = data;
+            // Set attributes from the data object to make them observable and for clarity if inspected
+            if (data) {
+                this.setAttribute('id', data.id);
+                this.setAttribute('description', data.description);
+                this.setAttribute('status', data.status);
+                this.setAttribute('creation-date', data.creation_date);
+                if(data.user_name) this.setAttribute('user-name', data.user_name);
+                if(data.user_surname) this.setAttribute('user-surname', data.user_surname);
+                if(data.user_office) this.setAttribute('user-office', data.user_office);
+                // Ensure soft_deleted is '1' or '0' string for attribute
+                this.setAttribute('soft-deleted', data.soft_deleted ? '1' : '0');
+            }
+            this.render();
+            this.addEventListeners(); // Re-attach listeners as render clears innerHTML
+        } catch (error) {
+            console.error('Error in set activity:', error, 'Data:', data);
+            this.innerHTML = '<p>Error al configurar la actividad.</p>';
         }
-        this.render();
-        this.addEventListeners(); // Re-attach listeners as render clears innerHTML
     }
 
     get activity() {
@@ -72,8 +77,13 @@ class ActivityItem extends HTMLElement {
     }
 
     getCurrentUserData() {
-        const data = localStorage.getItem('userData');
-        return data ? JSON.parse(data) : null;
+        try {
+            const data = localStorage.getItem('userData');
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Error parsing user data from localStorage:', error);
+            return null; // Fallback to null if parsing fails
+        }
     }
 
     isOwnedByUser() {
@@ -85,60 +95,65 @@ class ActivityItem extends HTMLElement {
     }
 
     render() {
-        const act = this.activity; // Use the getter
-        if (!act || !act.id) { 
-            this.innerHTML = '<p>Cargando actividad...</p>'; // Or some placeholder
-            return;
-        }
+        try {
+            const act = this.activity; // Use the getter
+            if (!act || !act.id) {
+                this.innerHTML = '<p>Cargando actividad...</p>'; // Or some placeholder
+                return;
+            }
 
-        const creationDate = new Date(act.creation_date).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
-        const isCompleted = act.status === 'completed';
-        
-        // Determine if admin view specific attributes are present
-        const isAdminView = this.closest('admin-activity-list') !== null;
-        let userDisplay = '';
-        if (isAdminView && act.user_name) {
-            userDisplay = ` <small class="activity-user">(${this.escapeHTML(act.user_name)} ${this.escapeHTML(act.user_surname)} - ${this.escapeHTML(act.user_office)})</small>`;
-        }
-        
-        let statusDisplay = this.escapeHTML(act.status);
-        this.style.opacity = '1'; // Reset opacity
-        if (act.soft_deleted) {
-            statusDisplay += ' (Borrado)';
-            this.style.opacity = '0.6';
-        }
+            const creationDate = new Date(act.creation_date).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+            const isCompleted = act.status === 'completed';
+
+            // Determine if admin view specific attributes are present
+            const isAdminView = this.closest('admin-activity-list') !== null;
+            let userDisplay = '';
+            if (isAdminView && act.user_name) {
+                userDisplay = ` <small class="activity-user">(${this.escapeHTML(act.user_name)} ${this.escapeHTML(act.user_surname)} - ${this.escapeHTML(act.user_office)})</small>`;
+            }
+
+            let statusDisplay = this.escapeHTML(act.status);
+            this.style.opacity = '1'; // Reset opacity
+            if (act.soft_deleted) {
+                statusDisplay += ' (Borrado)';
+                this.style.opacity = '0.6';
+            }
 
 
-        this.innerHTML = `
-            <article class="activity-item-article ${act.soft_deleted ? 'soft-deleted' : ''} status-${this.escapeHTML(act.status)}">
-                <header>
-                    <h4>${this.escapeHTML(act.description)} ${userDisplay}</h4>
-                </header>
-                <p>
-                    <small>Fecha: ${creationDate}</small><br>
-                    Estado: <mark>${statusDisplay}</mark>
-                </p>
-                <footer>
-                    ${!act.soft_deleted && !isAdminView ? `
-                        <button class="status-toggle" data-id="${act.id}" data-current-status="${this.escapeHTML(act.status)}">
-                            ${isCompleted ? 'Marcar como Pendiente' : 'Marcar como Completada'}
-                        </button>
-                        ${this.isOwnedByUser() ? `<button class="delete-activity" data-id="${act.id}">Borrar</button>` : ''}
-                    ` : ''}
-                    
-                    ${isAdminView && !act.soft_deleted ? `
-                        <select class="admin-status-change" data-id="${act.id}">
-                            <option value="pending" ${act.status === 'pending' ? 'selected' : ''}>Pendiente</option>
-                            <option value="completed" ${act.status === 'completed' ? 'selected' : ''}>Completada</option>
-                            <option value="approved" ${act.status === 'approved' ? 'selected' : ''}>Aprobar</option>
-                            <option value="rejected" ${act.status === 'rejected' ? 'selected' : ''}>Rechazar</option>
-                        </select>
-                        <!-- Hard delete can be added here if needed by admin -->
-                    ` : ''}
-                     ${isAdminView && act.soft_deleted ? `<small>Esta actividad fue borrada por el usuario.</small>` : ''}
-                </footer>
-            </article>
-        `;
+            this.innerHTML = `
+                <article class="activity-item-article ${act.soft_deleted ? 'soft-deleted' : ''} status-${this.escapeHTML(act.status)}">
+                    <header>
+                        <h4>${this.escapeHTML(act.description)} ${userDisplay}</h4>
+                    </header>
+                    <p>
+                        <small>Fecha: ${creationDate}</small><br>
+                        Estado: <mark>${statusDisplay}</mark>
+                    </p>
+                    <footer>
+                        ${!act.soft_deleted && !isAdminView ? `
+                            <button class="status-toggle" data-id="${act.id}" data-current-status="${this.escapeHTML(act.status)}">
+                                ${isCompleted ? 'Marcar como Pendiente' : 'Marcar como Completada'}
+                            </button>
+                            ${this.isOwnedByUser() ? `<button class="delete-activity" data-id="${act.id}">Borrar</button>` : ''}
+                        ` : ''}
+                        
+                        ${isAdminView && !act.soft_deleted ? `
+                            <select class="admin-status-change" data-id="${act.id}">
+                                <option value="pending" ${act.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                                <option value="completed" ${act.status === 'completed' ? 'selected' : ''}>Completada</option>
+                                <option value="approved" ${act.status === 'approved' ? 'selected' : ''}>Aprobar</option>
+                                <option value="rejected" ${act.status === 'rejected' ? 'selected' : ''}>Rechazar</option>
+                            </select>
+                            <!-- Hard delete can be added here if needed by admin -->
+                        ` : ''}
+                         ${isAdminView && act.soft_deleted ? `<small>Esta actividad fue borrada por el usuario.</small>` : ''}
+                    </footer>
+                </article>
+            `;
+        } catch (error) {
+            console.error('Error rendering activity item:', error, 'Activity data:', this.activity);
+            this.innerHTML = '<p>Error al mostrar la actividad. Consulte la consola para más detalles.</p>';
+        }
     }
 
     addEventListeners() {
@@ -146,27 +161,35 @@ class ActivityItem extends HTMLElement {
         const statusToggleButton = this.querySelector('.status-toggle');
         if (statusToggleButton) {
             statusToggleButton.addEventListener('click', (e) => {
-                const activityId = e.target.dataset.id;
-                const currentStatus = e.target.dataset.currentStatus;
-                const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
-                this.dispatchEvent(new CustomEvent('activitystatuschange', {
-                    bubbles: true,
-                    composed: true,
-                    detail: { id: activityId, status: newStatus }
-                }));
+                try {
+                    const activityId = e.target.dataset.id;
+                    const currentStatus = e.target.dataset.currentStatus;
+                    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+                    this.dispatchEvent(new CustomEvent('activitystatuschange', {
+                        bubbles: true,
+                        composed: true,
+                        detail: { id: activityId, status: newStatus }
+                    }));
+                } catch (error) {
+                    console.error('Error in statusToggleButton click listener:', error);
+                }
             });
         }
 
         const deleteButton = this.querySelector('.delete-activity');
         if (deleteButton) {
             deleteButton.addEventListener('click', (e) => {
-                if (confirm('¿Estás seguro de que quieres borrar esta actividad?')) {
-                    const activityId = e.target.dataset.id;
-                    this.dispatchEvent(new CustomEvent('activitydelete', {
-                        bubbles: true,
-                        composed: true,
-                        detail: { id: activityId }
-                    }));
+                try {
+                    if (confirm('¿Estás seguro de que quieres borrar esta actividad?')) {
+                        const activityId = e.target.dataset.id;
+                        this.dispatchEvent(new CustomEvent('activitydelete', {
+                            bubbles: true,
+                            composed: true,
+                            detail: { id: activityId }
+                        }));
+                    }
+                } catch (error) {
+                    console.error('Error in deleteButton click listener:', error);
                 }
             });
         }
@@ -175,13 +198,17 @@ class ActivityItem extends HTMLElement {
         const adminStatusSelect = this.querySelector('.admin-status-change');
         if (adminStatusSelect) {
             adminStatusSelect.addEventListener('change', (e) => {
-                const activityId = e.target.dataset.id;
-                const newStatus = e.target.value;
-                this.dispatchEvent(new CustomEvent('adminactivitystatuschange', {
-                    bubbles: true,
-                    composed: true,
-                    detail: { id: activityId, status: newStatus }
-                }));
+                try {
+                    const activityId = e.target.dataset.id;
+                    const newStatus = e.target.value;
+                    this.dispatchEvent(new CustomEvent('adminactivitystatuschange', {
+                        bubbles: true,
+                        composed: true,
+                        detail: { id: activityId, status: newStatus }
+                    }));
+                } catch (error) {
+                    console.error('Error in adminStatusSelect change listener:', error);
+                }
             });
         }
     }
