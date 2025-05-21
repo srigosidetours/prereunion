@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plan Diario</title>
+    <title>Temas de la reunión</title>
     <!-- MVP.css and custom.css will be added in the next step -->
     <link rel="stylesheet" href="css/mvp.css">
     <link rel="stylesheet" href="css/custom.css">
@@ -20,7 +20,7 @@
 </head>
 <body class="loading">
     <header>
-        <h1>Plan Diario</h1>
+        <h1>Temas de la reunión</h1>
         <nav>
             <a href="index.php">Inicio</a>
             <a href="admin.php">Admin Panel</a>
@@ -50,7 +50,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2024 Planificador Diario</p>
+        <p>Todos los derechos reservados.</p>
     </footer>
 
     <!-- Web component scripts will be added later -->
