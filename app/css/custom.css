@@ -1,0 +1,59 @@
+/* /app/css/custom.css */
+
+/* 1. Modern Fonts */
+:root {
+    --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+/* 2. Generous Spacing */
+:root {
+    --spacing: 1.5rem; /* MVP.css default is 1rem, we are making it more generous */
+}
+
+/* 3. Accessible Color Palette (Example - to be refined if specific colors are preferred) */
+/* This is a basic accessible palette. 
+   Consider using webaim.org or other tools for contrast checking if more specific colors are chosen. */
+:root {
+    /* Default MVP colors are generally good, but we can ensure high contrast options */
+    
+    /* Text colors */
+    --color-text: #212121; /* Dark grey for text, good contrast on light backgrounds */
+    --color-text-secondary: #5f6368; /* Lighter grey for secondary text */
+
+    /* Background colors */
+    --color-bg: #ffffff; /* White background */
+    --color-bg-secondary: #f8f9fa; /* Very light grey for secondary backgrounds (e.g., code blocks, tables) */
+
+    /* Accent/Link colors */
+    --color-link: #0056b3; /* A standard blue, ensure it has good contrast */
+    --color-link-hover: #003d80; /* Darker blue for hover */
+    
+    /* Border colors */
+    --color-border: #ced4da; /* Light grey for borders */
+
+    /* UI elements like buttons - MVP handles this well, but you can customize if needed */
+    /* --color-primary: var(--color-link); Defined by MVP.css */
+    /* --color-primary-inverted: var(--color-bg); Defined by MVP.css */
+}
+
+/* Ensure links in nav have good contrast and are clearly identifiable */
+header nav a {
+    color: var(--color-link);
+    text-decoration: none; /* MVP default */
+    padding: 0.5rem var(--spacing-s); /* MVP default is spacing-s, which is 0.5rem */
+}
+header nav a:hover, header nav a:focus {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-link-hover);
+    text-decoration: underline;
+}
+
+/* Style for the loading message, will be hidden by JS */
+body.loading::before {
+    content: "Cargando..."; /* Default message, can be overridden in specific pages */
+    display: block;
+    text-align: center;
+    padding: var(--spacing-l); /* MVP's large spacing */
+    font-style: italic;
+    color: var(--color-text-secondary);
+}
