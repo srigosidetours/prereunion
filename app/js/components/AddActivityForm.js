@@ -12,44 +12,67 @@ class AddActivityForm extends HTMLElement {
 
         // Listen for user identification to enable/disable form or update internal state
         document.addEventListener('useridentified', (e) => {
-            this.userData = e.detail;
-            this.render(); // Re-render to enable form if it was disabled
-            this.addEventListeners();
+            try {
+                this.userData = e.detail;
+                this.render(); // Re-render to enable form if it was disabled
+                this.addEventListeners();
+            } catch (error) {
+                console.error("Error in useridentified event listener:", error);
+            }
         });
         document.addEventListener('usercleared', () => {
-            this.userData = null;
-            this.render(); // Re-render to disable form
-            this.addEventListeners();
+            try {
+                this.userData = null;
+                this.render(); // Re-render to disable form
+                this.addEventListeners();
+            } catch (error) {
+                console.error("Error in usercleared event listener:", error);
+            }
         });
     }
 
     getCurrentUserData() {
-        const data = localStorage.getItem('userData');
-        return data ? JSON.parse(data) : null;
+        try {
+            const data = localStorage.getItem('userData');
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error("Error parsing user data from localStorage in AddActivityForm:", error);
+            return null;
+        }
     }
 
     render() {
-        let content = '';
-        if (!this.userData) {
-            content = `
-                <p><em>Debes introducir tus datos arriba para poder añadir actividades.</em></p>
-            `;
-        } else {
-            content = `
-                <form id="add-activity-actual-form">
-                    <label for="activity-description">Descripción de la actividad:</label>
-                    <input type="text" id="activity-description" name="description" required>
-                    <button type="submit">Añadir Actividad</button>
-                </form>
-            `;
+        try {
+            let content = '';
+            if (!this.userData) {
+                content = `
+                    <p><em>Debes introducir tus datos arriba para poder añadir actividades.</em></p>
+                `;
+            } else {
+                content = `
+                    <form id="add-activity-actual-form">
+                        <label for="activity-description">Descripción de la actividad:</label>
+                        <input type="text" id="activity-description" name="description" required>
+                        <button type="submit">Añadir Actividad</button>
+                    </form>
+                `;
+            }
+            this.innerHTML = content;
+        } catch (error) {
+            console.error("Error rendering AddActivityForm:", error);
+            this.innerHTML = "<p style='color: red;'>Error al mostrar el formulario. Consulte la consola.</p>";
         }
-        this.innerHTML = content;
     }
 
     addEventListeners() {
-        const form = this.querySelector('#add-activity-actual-form');
-        if (form) {
-            form.addEventListener('submit', this.handleSubmit.bind(this));
+        try {
+            const form = this.querySelector('#add-activity-actual-form');
+            if (form) {
+                form.addEventListener('submit', this.handleSubmit.bind(this));
+            }
+        } catch (error) {
+            console.error("Error adding event listeners in AddActivityForm:", error);
+            // Depending on the severity, you might want to disable the form or show a message
         }
     }
 

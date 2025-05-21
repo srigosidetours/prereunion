@@ -33,8 +33,13 @@ class ActivityList extends HTMLElement {
     }
 
     getCurrentUserData() {
-        const data = localStorage.getItem('userData');
-        return data ? JSON.parse(data) : null;
+        try {
+            const data = localStorage.getItem('userData');
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error("Error parsing user data from localStorage:", error);
+            return null;
+        }
     }
 
     async fetchActivities() {
@@ -156,44 +161,49 @@ class ActivityList extends HTMLElement {
     }
 
     render() {
-        // Message for when no user is identified
-        if (!this.userData) {
-            this.innerHTML = '<p>Por favor, introduce tus datos para ver o añadir actividades.</p>';
-            return;
-        }
+        try {
+            // Message for when no user is identified
+            if (!this.userData) {
+                this.innerHTML = '<p>Por favor, introduce tus datos para ver o añadir actividades.</p>';
+                return;
+            }
 
-        // Message for loading (already set by fetchActivities, but good to have a check)
-        // This specific check might be redundant if fetchActivities always sets innerHTML before calling render.
-        if (this.innerHTML.includes('Cargando actividades...') && this._activities.length === 0) {
-            // Keep loading message if still loading and no activities yet.
-            // If fetch finishes and there are no activities, the next block handles it.
-            return; 
-        }
-        
-        // Clear loading message or previous content
-        this.innerHTML = ''; 
+            // Message for loading (already set by fetchActivities, but good to have a check)
+            // This specific check might be redundant if fetchActivities always sets innerHTML before calling render.
+            if (this.innerHTML.includes('Cargando actividades...') && this._activities.length === 0) {
+                // Keep loading message if still loading and no activities yet.
+                // If fetch finishes and there are no activities, the next block handles it.
+                return;
+            }
 
-        if (this._activities.length === 0) {
-            this.innerHTML = '<p>No tienes actividades programadas. ¡Añade una nueva!</p>';
-            return;
-        }
-        
-        const listElement = document.createElement('div');
-        listElement.setAttribute('role', 'list');
+            // Clear loading message or previous content
+            this.innerHTML = '';
 
-        this._activities
-            .filter(activityData => activityData.soft_deleted === 0 || activityData.soft_deleted === "0" || !activityData.soft_deleted) // Ensure correct filtering
-            .forEach(activityData => {
-                const item = document.createElement('activity-item');
-                item.activity = activityData; // Use the setter in ActivityItem
-                listElement.appendChild(item);
-            });
-        
-        if (listElement.children.length === 0 && this._activities.length > 0) {
-            // This means all activities are soft-deleted
-            this.innerHTML = '<p>Todas tus actividades han sido borradas. ¡Añade una nueva!</p>';
-        } else {
-            this.appendChild(listElement);
+            if (this._activities.length === 0) {
+                this.innerHTML = '<p>No tienes actividades programadas. ¡Añade una nueva!</p>';
+                return;
+            }
+
+            const listElement = document.createElement('div');
+            listElement.setAttribute('role', 'list');
+
+            this._activities
+                .filter(activityData => activityData.soft_deleted === 0 || activityData.soft_deleted === "0" || !activityData.soft_deleted) // Ensure correct filtering
+                .forEach(activityData => {
+                    const item = document.createElement('activity-item');
+                    item.activity = activityData; // Use the setter in ActivityItem
+                    listElement.appendChild(item);
+                });
+
+            if (listElement.children.length === 0 && this._activities.length > 0) {
+                // This means all activities are soft-deleted
+                this.innerHTML = '<p>Todas tus actividades han sido borradas. ¡Añade una nueva!</p>';
+            } else {
+                this.appendChild(listElement);
+            }
+        } catch (error) {
+            console.error("Error rendering ActivityList:", error);
+            this.innerHTML = "<p style='color: red;'>Error al mostrar la lista de actividades. Consulte la consola.</p>";
         }
     }
 }
